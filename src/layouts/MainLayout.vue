@@ -3,9 +3,9 @@
     <q-header elevated>
       <q-toolbar>
         <q-toolbar-title>
+          <q-img src="../assets/Isotipo.svg" width="50px" />
           Agrocontrol
           <span style="font-weight: 300; margin-right: 5px">Insights</span>
-          <q-icon name="ion-ios-leaf" size="25px" color="white" />
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
