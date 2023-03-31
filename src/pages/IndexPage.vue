@@ -1,31 +1,32 @@
 <template>
   <q-page padding>
     <q-card class="q-pa-md">
-      <div class="row items-center">
-        <div :class="$q.screen.md ? 'col-md-2 q-mx-xs' : 'col-xs-12 q-mb-md'">
+      <div class="row">
+        <div :class="$q.screen.xs ? 'col-xs-12 q-mb-md' : 'col-md-4 q-mx-xs'">
           <measure-card
             title="pH"
-            value="7.0"
+            :value="pH"
             text="text-white"
-            styles="background: radial-gradient(circle, #898121 0%, #539165 100%)"
+            styles="background: radial-gradient(circle, #898121 0%, #539165 100%);"
             bordered
             flat
           />
         </div>
-        <div :class="$q.screen.md ? 'col-md-2 q-mx-xs' : 'col-xs-12 q-mb-md'">
+        <div :class="$q.screen.xs ? 'col-xs-12 q-mb-md' : 'col-md-4 q-mx-xs'">
           <measure-card
-            title="Temperature"
-            value="25.0"
+            title="Temperatura °C"
+            :value="temperature"
             text="text-white"
-            styles="background: radial-gradient(circle, #35a2ff 0%, #014a88 100%)"
+            styles="background: radial-gradient(circle, #35a2ff
+          0%, #014a88 100%)"
             bordered
             flat
           />
         </div>
-        <div :class="$q.screen.md ? 'col-md-2 q-mx-xs' : 'col-xs-12 q-mb-md'">
+        <div :class="$q.screen.xs ? 'col-xs-12 q-mb-md' : 'col-md-3 q-mx-xs'">
           <measure-card
-            title="Soil Moisture"
-            value="25.0"
+            title="Humedad del suelo"
+            :value="seriesMoisture[4]"
             text="text-white"
             styles="background: radial-gradient(circle, #FF7B54 0%, #C27664 100%);"
             bordered
@@ -36,17 +37,19 @@
     </q-card>
     <q-card class="q-mt-md q-pa-md">
       <div class="row">
-        <div class="col-md-6 col-xs-12">
+        <q-card bordered class="col-md-5 col-xs-12">
           <apexchart
             width="500"
             type="line"
             :options="options"
             :series="series"
-            :title="title"
+            :title="options.title"
           ></apexchart>
-        </div>
+        </q-card>
 
-        <div class="col-md-6 col-xs-12">
+        <div class="col-1"></div>
+
+        <q-card bordered class="col-md-6 col-xs-12">
           <apexchart
             width="500"
             type="line"
@@ -54,20 +57,42 @@
             :series="series_electroconductivity"
             :title="title"
           ></apexchart>
-        </div>
+        </q-card>
       </div>
     </q-card>
   </q-page>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import MeasureCard from "../components/Measures/MeasureCard.vue";
 
 const options = ref({
+  title: {
+    text: "Humedad del suelo",
+    align: "center",
+  },
   chart: {
+    grid: {
+      borderColor: "#e7e7e7",
+      row: {
+        colors: ["#f3f3f3", "transparent"], // takes an array which will be repeated on columns
+        opacity: 0.5,
+      },
+    },
+    id: "realtime",
     height: 350,
     type: "line",
+    animations: {
+      enabled: true,
+      easing: "linear",
+      dynamicAnimation: {
+        speed: 1000,
+      },
+    },
+    toolbar: {
+      show: false,
+    },
     dropShadow: {
       enabled: true,
       color: "#000",
@@ -76,68 +101,104 @@ const options = ref({
       blur: 10,
       opacity: 0.2,
     },
-    toolbar: {
-      show: false,
+    // https://apexcharts.com/docs/options/chart/animations/
+    animations: {
+      enabled: true,
+      easing: "linear",
+      speed: 200,
+      animateGradually: {
+        enabled: false,
+      },
+
+      dynamicAnimation: {
+        enabled: true,
+        speed: 150,
+      },
+    },
+    yaxis: {
+      max: 15,
     },
   },
-  colors: ["#77B6EA", "#545454"],
   dataLabels: {
     enabled: true,
   },
   stroke: {
     curve: "smooth",
   },
-  title: {
-    text: "Average High & Low Temperature",
-    align: "left",
-  },
-  grid: {
-    borderColor: "#e7e7e7",
-    row: {
-      colors: ["#f3f3f3", "transparent"], // takes an array which will be repeated on columns
-      opacity: 0.5,
-    },
-  },
   markers: {
-    size: 1,
+    size: 2,
   },
-  xaxis: {
-    categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
-    title: {
-      text: "Month",
-    },
-  },
-  yaxis: {
-    title: {
-      text: "Temperature",
-    },
-    min: 5,
-    max: 40,
-  },
-  legend: {
-    position: "top",
-    horizontalAlign: "right",
-    floating: true,
-    offsetY: -25,
-    offsetX: -5,
+  colors: ["#9c652e", "#279d00"],
+  zoom: {
+    enabled: false,
   },
 });
 
-const series = ref([
+const seriesMoisture = reactive([14.22, 14.27, 14.28, 14.33, 14.44]);
+
+const series = reactive([
   {
-    name: "High - 2013",
-    data: [28, 29, 33, 36, 32, 32, 33],
-  },
-  {
-    name: "Low - 2013",
-    data: [12, 11, 14, 18, 17, 13, 13],
+    name: "Moisture",
+    data: seriesMoisture,
   },
 ]);
 
+const updateChart = () => {
+  const max = 14.99;
+  const min = 14;
+  // make number oscil between 14 and 14.99
+  const newData = series[0].data.map(() => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  });
+
+  seriesMoisture.push(newData[4]);
+  seriesMoisture.shift();
+};
+
+onMounted(() => {
+  setInterval(updateChart, 1000);
+  setInterval(temperatureRandom, 3600);
+  setInterval(pHRandom, 3000);
+});
+
+const temperature = ref(26);
+
+// generate random numbers for temperature card data just return a random number between 29 and 32
+const temperatureRandom = () => {
+  const random = () => {
+    return Math.floor(Math.random() * (32 - 29 + 1)) + 29;
+  };
+
+  temperature.value = random();
+};
+
+const pH = ref(7.0);
+
+// generate random numbers for temperature card data just return a random number
+const pHRandom = () => {
+  const random = () => {
+    return Math.floor(Math.random() * (7 - 6 + 1)) + 5;
+  };
+
+  pH.value = random();
+};
+
 const options_electroconductivity = ref({
+  title: {
+    text: "Electroconductividad",
+    align: "center",
+  },
   chart: {
+    id: "realtime",
     height: 350,
     type: "line",
+    animations: {
+      enabled: true,
+      easing: "linear",
+      dynamicAnimation: {
+        speed: 1000,
+      },
+    },
     dropShadow: {
       enabled: true,
       color: "#000",
@@ -146,61 +207,52 @@ const options_electroconductivity = ref({
       blur: 10,
       opacity: 0.2,
     },
+
     toolbar: {
       show: false,
     },
-  },
-  colors: ["#EBB02D", "#545454"],
-  dataLabels: {
-    enabled: true,
+    zoom: {
+      enabled: false,
+    },
   },
   stroke: {
     curve: "smooth",
   },
-  title: {
-    text: "Average High & Low Soil electroconductivity",
-    align: "left",
+  dataLabels: {
+    enabled: true,
   },
-  grid: {
-    borderColor: "#e7e7e7",
-    row: {
-      colors: ["#f3f3f3", "transparent"], // takes an array which will be repeated on columns
-      opacity: 0.5,
+  colors: ["#EBB02D"],
+  // https://apexcharts.com/docs/options/chart/animations/
+  animations: {
+    enabled: true,
+    easing: "linear",
+    speed: 200,
+    animateGradually: {
+      enabled: false,
     },
-  },
-  markers: {
-    size: 1,
-  },
-  xaxis: {
-    categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
-    title: {
-      text: "Month",
+
+    dataLabels: {
+      enabled: false,
     },
-  },
-  yaxis: {
-    title: {
-      text: "Electroconductivity",
+    dynamicAnimation: {
+      enabled: true,
+      speed: 150,
     },
-    min: 5,
-    max: 40,
-  },
-  legend: {
-    position: "top",
-    horizontalAlign: "right",
-    floating: true,
-    offsetY: -25,
-    offsetX: -5,
+    yaxis: {
+      max: 15,
+    },
+    markers: {
+      size: 1,
+    },
   },
 });
 
-const series_electroconductivity = ref([
+const seriesElectroconductivity = reactive([22, 22, 20, 21, 22]);
+
+const series_electroconductivity = reactive([
   {
-    name: "High - 2013",
-    data: [28, 29, 33, 36, 32, 32, 33],
-  },
-  {
-    name: "Low - 2013",
-    data: [12, 11, 14, 18, 17, 13, 13],
+    name: "Electroconductivity",
+    data: seriesElectroconductivity,
   },
 ]);
 </script>
