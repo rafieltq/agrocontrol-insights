@@ -36,10 +36,10 @@
       </div>
     </q-card>
     <q-card class="q-mt-md q-pa-md">
-      <div class="row">
-        <q-card bordered class="col-md-5 col-xs-12">
+      <div class="row text-center">
+        <q-card bordered class="col-md-6 col-xs-12">
           <apexchart
-            width="500"
+            width="90%"
             type="line"
             :options="options"
             :series="series"
@@ -47,11 +47,12 @@
           ></apexchart>
         </q-card>
 
-        <div class="col-1"></div>
-
-        <q-card bordered class="col-md-6 col-xs-12">
+        <q-card
+          bordered
+          :class="$q.screen.xs ? 'col-xs-12 q-mt-md' : 'col-md-5 q-ml-md'"
+        >
           <apexchart
-            width="500"
+            width="90%"
             type="line"
             :options="options_electroconductivity"
             :series="series_electroconductivity"
